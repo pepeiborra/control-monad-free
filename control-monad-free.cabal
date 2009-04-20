@@ -3,8 +3,7 @@ version: 0.1.20090420
 Cabal-Version:  >= 1.2
 build-type: Simple
 license: PublicDomain
-copyright: Pepe Iborra, All Rights Reserved
-author: Pepe Iborra
+author: Luke Palmer, Pepe Iborra
 maintainer: pepeiborra@gmail.com
 homepage: http://github.com/pepeiborra/control-monad-free
 description: 
