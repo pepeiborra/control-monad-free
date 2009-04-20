@@ -13,7 +13,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 
 module Control.Monad.Free.Improve (
-   C, rep, improve
+   C(..), rep, improve
   ) where
 
 import Control.Monad
