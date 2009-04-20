@@ -1,0 +1,18 @@
+name: control-monad-free
+version: 0.1.20090420
+Cabal-Version:  >= 1.2
+build-type: Simple
+license: PublicDomain
+copyright: Pepe Iborra, All Rights Reserved
+homepage: http://github.com/pepeiborra/control-monad-free
+synopsis: Free monads, monad transformers, and useful instances
+description: 
+category: Control
+author: Pepe Iborra
+
+Library
+  buildable: True
+  build-depends: base, mtl
+  exposed-modules:
+     Control.Monad.Free
+     Control.Monad.Free.Improve
