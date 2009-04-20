@@ -23,4 +23,5 @@ Library
   build-depends: base, mtl
   exposed-modules:
      Control.Monad.Free
+     Control.Monad.Free.Zip
      Control.Monad.Free.Improve
