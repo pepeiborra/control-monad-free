@@ -4,6 +4,7 @@
 {-# LANGUAGE FlexibleInstances, FlexibleContexts, UndecidableInstances #-}
 
 module Control.Monad.Free (
+   module Control.Monad,
    MonadFree(..),
    Free(..),
    foldFree, foldFreeM,
