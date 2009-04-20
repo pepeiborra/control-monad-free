@@ -4,11 +4,20 @@ Cabal-Version:  >= 1.2
 build-type: Simple
 license: PublicDomain
 copyright: Pepe Iborra, All Rights Reserved
-homepage: http://github.com/pepeiborra/control-monad-free
-synopsis: Free monads, monad transformers, and useful instances
-description: 
-category: Control
 author: Pepe Iborra
+maintainer: pepeiborra@gmail.com
+homepage: http://github.com/pepeiborra/control-monad-free
+description: 
+          This package provides datatypes to construct Free monads, 
+	  Free monad transformers, and useful instances. In addition it
+	  provides the constructs to avoid quadratic complexity of left 
+	  associative bind, as explained in:
+
+          * Janis Voigtlander, /Asymptotic Improvement of Computations over Free Monads, MPC'08/
+ 
+description: Free monads and monad transformers
+category: Control, Monads
+stability: experimental
 
 Library
   buildable: True
