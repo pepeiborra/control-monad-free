@@ -1,6 +1,6 @@
 name: control-monad-free
-version: 0.1.20090420
-Cabal-Version:  >= 1.2
+version: 0.4
+Cabal-Version:  >= 1.2.3
 build-type: Simple
 license: PublicDomain
 author: Luke Palmer, Pepe Iborra
@@ -11,16 +11,18 @@ description:
 	  Free monad transformers, and useful instances. In addition it
 	  provides the constructs to avoid quadratic complexity of left 
 	  associative bind, as explained in:
-
+          .
           * Janis Voigtlander, /Asymptotic Improvement of Computations over Free Monads, MPC'08/
  
-description: Free monads and monad transformers
+synopsis: Free monads and monad transformers
 category: Control, Monads
 stability: experimental
+
 
 Library
   buildable: True
   build-depends: base, mtl
+  extensions:  StandaloneDeriving, Rank2Types, MultiParamTypeClasses, FlexibleInstances, FlexibleContexts, UndecidableInstances
   exposed-modules:
      Control.Monad.Free
      Control.Monad.Free.Zip

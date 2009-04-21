@@ -1,4 +1,4 @@
-module Control.Monad.Free.Zip where
+module Control.Monad.Free.Zip (zipFree, zipFree_) where
 
 import Control.Monad.Free
 import Control.Monad.State

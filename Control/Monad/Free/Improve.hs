@@ -37,7 +37,7 @@ instance Monad (C mu) where
   C p >>= k = C (\h -> p (\a -> case k a of C q -> q h))
 
 instance Functor f => MonadFree f (C (Free f)) where
-  jail t = C (\h -> jail (fmap (\(C p) -> p h) t))
+  wrap t = C (\h -> wrap (fmap (\(C p) -> p h) t))
   free   = rep . (fmap.fmap.fmap) rep . free . improve
 
 instance MonadPlus mu => MonadPlus (C mu) where
