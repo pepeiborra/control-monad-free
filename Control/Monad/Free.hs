@@ -72,8 +72,7 @@ evalFree p _ (Pure x)   = p x
 evalFree _ i (Impure x) = i x
 
 mapFree :: (Functor f, Functor g) => (forall a. f a -> g a) -> Free f a -> Free g a
-mapFree eta (Pure a)   = Pure a
-mapFree eta (Impure x) = Impure (fmap (mapFree eta) (eta x))
+mapFree eta = foldFree Pure (Impure . eta)
 
 -- * Monad Transformer
 --   (built upon Luke Palmer control-monad-free hackage package)
