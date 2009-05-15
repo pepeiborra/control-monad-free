@@ -21,7 +21,7 @@ stability: experimental
 
 Library
   buildable: True
-  build-depends: base, mtl
+  build-depends: base, transformers
   extensions:  StandaloneDeriving, Rank2Types, MultiParamTypeClasses, FlexibleInstances, FlexibleContexts, UndecidableInstances, OverlappingInstances
   exposed-modules:
      Control.Monad.Free
