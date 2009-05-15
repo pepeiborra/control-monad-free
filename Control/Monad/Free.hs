@@ -7,7 +7,7 @@ module Control.Monad.Free (
    module Control.Monad,
 -- * Free Monads
    MonadFree(..),
-   Free(..),
+   Free(..), isPure, isImpure,
    foldFree, foldFreeM,
    evalFree, mapFree,
 -- * Free Monad Transformers
@@ -55,6 +55,9 @@ instance Functor f => Monad (Free f) where
     return          = Pure
     Pure a    >>= f = f a
     Impure fa >>= f = Impure (fmap (>>= f) fa)
+
+isPure Pure{} = True; isPure _ = False
+isImpure = not . isPure
 
 foldFree :: Functor f => (a -> b) -> (f b -> b) -> Free f a -> b
 foldFree pure _    (Pure   x) = pure x
