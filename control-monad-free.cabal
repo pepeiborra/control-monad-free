@@ -18,10 +18,16 @@ synopsis: Free monads and monad transformers
 category: Control, Monads
 stability: experimental
 
+Flag transformers
+   default: False
 
 Library
   buildable: True
-  build-depends: base, transformers
+  build-depends: base
+  if flag(transformers)
+     build-depends: transformers
+  else
+     build-depends: mtl
   extensions:  StandaloneDeriving, Rank2Types, MultiParamTypeClasses, FlexibleInstances, FlexibleContexts, UndecidableInstances, OverlappingInstances
   exposed-modules:
      Control.Monad.Free
