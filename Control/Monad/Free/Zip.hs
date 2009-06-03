@@ -1,8 +1,13 @@
+{-# LANGUAGE CPP #-}
 module Control.Monad.Free.Zip (zipFree, zipFree_) where
 
 import Control.Monad.Free
 import Control.Monad.Trans
+#ifdef TRANSFORMERS
 import Control.Monad.Trans.State
+#else
+import Control.Monad.State
+#endif
 import Data.Foldable
 import Data.Traversable as T
 

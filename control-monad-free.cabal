@@ -26,6 +26,7 @@ Library
   build-depends: base
   if flag(transformers)
      build-depends: transformers
+     cpp-options: -DTRANSFORMERS
   else
      build-depends: mtl
   extensions:  StandaloneDeriving, Rank2Types, MultiParamTypeClasses, FlexibleInstances, FlexibleContexts, UndecidableInstances, OverlappingInstances
