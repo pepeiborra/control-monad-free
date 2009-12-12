@@ -1,5 +1,5 @@
 name: control-monad-free
-version: 0.4.1
+version: 0.5
 Cabal-Version:  >= 1.2.3
 build-type: Simple
 license: PublicDomain
@@ -19,11 +19,11 @@ category: Control, Monads
 stability: experimental
 
 Flag transformers
-   default: False
+   default: True
 
 Library
   buildable: True
-  build-depends: base
+  build-depends: base >= 2 && < 5
   if flag(transformers)
      build-depends: transformers
      cpp-options: -DTRANSFORMERS
