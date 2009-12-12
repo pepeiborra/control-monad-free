@@ -100,6 +100,10 @@ instance (Functor f, Monad m) => Monad (FreeT f m) where
              Left  x  -> unFreeT $ f x
              Right xc -> return . Right $ fmap (>>= f) xc
 
+instance (Functor f, Monad m) => MonadFree f (FreeT f m) where
+    wrap = FreeT . return . Right
+    free = lift . unFreeT
+
 instance (Functor f) => MonadTrans (FreeT f) where
     lift = FreeT . liftM Left
 
