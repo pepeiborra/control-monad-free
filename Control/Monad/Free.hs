@@ -34,7 +34,7 @@ instance Functor f => MonadFree f (Free f) where
     free = evalFree (Pure . Left) (Pure . Right)
     wrap = Impure
 
-data Free f a = Impure (f (Free f a)) | Pure a
+data Free f a = Impure !(f (Free f a)) | Pure a
 deriving instance (Eq a, Eq (f(Free f a))) => Eq (Free f a)
 deriving instance (Ord a, Ord (f(Free f a))) => Ord (Free f a)
 deriving instance (Show a, Show (f(Free f a))) => Show (Free f a)
