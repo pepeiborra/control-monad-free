@@ -18,6 +18,7 @@ module Control.Monad.Free (
   ) where
 
 import Control.Applicative
+import Control.DeepSeq
 import Control.Monad
 import Control.Monad.Trans
 import Data.Foldable
@@ -55,6 +56,10 @@ instance Functor f => Monad (Free f) where
     return          = Pure
     Pure a    >>= f = f a
     Impure fa >>= f = Impure (fmap (>>= f) fa)
+
+instance (NFData a, NFData (f(Free f a))) => NFData (Free f a) where
+  rnf (Pure a) = rnf a `seq` ()
+  rnf (Impure fa) = rnf fa `seq` ()
 
 isPure Pure{} = True; isPure _ = False
 isImpure = not . isPure
