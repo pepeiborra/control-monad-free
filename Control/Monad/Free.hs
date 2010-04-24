@@ -20,7 +20,7 @@ module Control.Monad.Free (
 import Control.Applicative
 import Control.DeepSeq
 import Control.Monad
-import Control.Monad.Trans
+import Control.Monad.Trans.Class
 import Data.Foldable
 import Data.Monoid
 import Data.Traversable as T

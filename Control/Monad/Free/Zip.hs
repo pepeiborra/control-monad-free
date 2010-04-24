@@ -2,7 +2,7 @@
 module Control.Monad.Free.Zip (zipFree, zipFree_) where
 
 import Control.Monad.Free
-import Control.Monad.Trans
+import Control.Monad.Trans.Class
 #ifdef TRANSFORMERS
 import Control.Monad.Trans.State
 #else
