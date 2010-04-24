@@ -25,7 +25,7 @@ Library
   buildable: True
   build-depends: base >= 2 && < 5, deepseq
   if flag(transformers)
-     build-depends: transformers
+     build-depends: transformers == 0.2.*
      cpp-options: -DTRANSFORMERS
   else
      build-depends: mtl
