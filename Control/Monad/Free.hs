@@ -68,7 +68,7 @@ foldFree :: Functor f => (a -> b) -> (f b -> b) -> Free f a -> b
 foldFree pure _    (Pure   x) = pure x
 foldFree pure imp  (Impure x) = imp (fmap (foldFree pure imp) x)
 
-foldFreeM :: (Functor f, Traversable f, Monad m) => (a -> m b) -> (f b -> m b) -> Free f a -> m b
+foldFreeM :: (Traversable f, Monad m) => (a -> m b) -> (f b -> m b) -> Free f a -> m b
 foldFreeM pure _    (Pure   x) = pure x
 foldFreeM pure imp  (Impure x) = imp =<< T.mapM (foldFreeM pure imp) x
 
