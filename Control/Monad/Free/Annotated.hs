@@ -9,7 +9,7 @@ module Control.Monad.Free.Annotated
  Free(..),
  pure, impure,
  isPure, isImpure,
- down, up,
+ down, up, ann,
  foldFree, foldFreeM,
  mapFree, mapFreeM,
  evalFree,
@@ -53,6 +53,8 @@ import qualified Prelude                   as P
 data Free ann f a = Impure ann (f(Free ann f a))
                   | Pure   ann a
 
+ann (Impure ann _) = ann
+ann (Pure   ann _) = ann
 {-
 instance (Functor f, Foldable f, Measured a ann) => MonadFree f (Free ann f) where
   free = evalFree (pure . Left) (pure . Right)

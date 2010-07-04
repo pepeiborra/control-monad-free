@@ -27,7 +27,7 @@ import Data.Traversable as T
 import Prelude hiding (abs)
 
 -- | This type class generalizes over encodings of Free Monads.
-class (Functor f, Monad m) => MonadFree f m where
+class Functor f => MonadFree f m where
     free :: m a -> m (Either a (f (m a)))  -- ^ 'Opens' a computation and allows to observe the side effects
     wrap :: f (m a) -> m a                 -- ^  Wraps a side effect into a monadic computation
 
