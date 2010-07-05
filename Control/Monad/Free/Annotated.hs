@@ -11,8 +11,9 @@ module Control.Monad.Free.Annotated
  isPure, isImpure,
  down, up, ann,
  foldFree, foldFreeM,
+ foldFree', foldFreeM',
  mapFree, mapFreeM,
- evalFree,
+ evalFree, evalFree',
  fmap, unsafeFmap,
  mapM, unsafeMapM,
  join, unsafeJoin,
@@ -150,6 +151,8 @@ up = Sans.foldFree pure impure
 
 type Algebra    f a = f a -> a
 type AlgebraM m f a = f a -> m a
+type AnnAlgebra    ann f a = ann -> f a -> a
+type AnnAlgebraM m ann f a = ann -> f a -> m a
 
 -- | Catamorphism over a 'Free'
 foldFree :: Functor f => (a->b) -> Algebra f b -> Free ann f a -> b
@@ -157,11 +160,22 @@ foldFree fp fi = loop where
   loop (Pure   _ x) = fp x
   loop (Impure _ x) = fi (P.fmap loop x)
 
+foldFree' :: Functor f => (ann -> a -> b) -> AnnAlgebra ann f b -> Free ann f a -> b
+foldFree' fp fi = loop where
+  loop (Pure   ann x) = fp ann x
+  loop (Impure ann x) = fi ann (P.fmap loop x)
+
 -- | Effectful catamorphism over a 'Free'
 foldFreeM :: (Monad m, Traversable f) => (a-> m b) -> AlgebraM m f b -> Free ann f a -> m b
 foldFreeM fp fi = loop where
   loop (Pure   _ x) = fp x
   loop (Impure _ x) = fi =<< T.mapM loop x
+
+foldFreeM' :: (Monad m, Traversable f) =>
+              (ann -> a -> m b) -> AnnAlgebraM m ann f b -> Free ann f a -> m b
+foldFreeM' fp fi = loop where
+  loop (Pure   ann x) = fp ann x
+  loop (Impure ann x) = fi ann =<< T.mapM loop x
 
 mapFree :: (Monoid ann, Measured a ann, Functor f', Foldable f', Functor f) =>
            (forall a. f a -> f' a) -> Free ann f a -> Free ann f' a
@@ -175,6 +189,10 @@ mapFreeM eta = foldFreeM (return.pure) (liftM impure . eta)
 evalFree :: (a -> b) -> (f(Free ann f a) -> b) -> Free ann f a -> b
 evalFree p _ (Pure   _ x) = p x
 evalFree _ i (Impure _ x) = i x
+
+evalFree' :: (ann -> a -> b) -> (ann -> f(Free ann f a) -> b) -> Free ann f a -> b
+evalFree' p _ (Pure   ann x) = p ann x
+evalFree' _ i (Impure ann x) = i ann x
 
 {-# INLINE fmap #-}
 fmap :: (Functor f, Foldable f, Monoid ann, Measured b ann) => (a -> b) -> Free ann f a -> Free ann f b
