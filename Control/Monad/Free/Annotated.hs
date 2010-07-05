@@ -171,40 +171,49 @@ mapFreeM :: (Monoid ann, Measured a ann, Traversable f, Functor f', Foldable f',
            (forall a. f a -> m(f' a)) -> Free ann f a -> m(Free ann f' a)
 mapFreeM eta = foldFreeM (return.pure) (liftM impure . eta)
 
+{-# INLINE evalFree #-}
 evalFree :: (a -> b) -> (f(Free ann f a) -> b) -> Free ann f a -> b
 evalFree p _ (Pure   _ x) = p x
 evalFree _ i (Impure _ x) = i x
 
+{-# INLINE fmap #-}
 fmap :: (Functor f, Foldable f, Monoid ann, Measured b ann) => (a -> b) -> Free ann f a -> Free ann f b
 fmap f = loop where
   loop (Pure   _ a) = pure (f a)
   loop (Impure _ a) = impure (P.fmap loop a)
 
+{-# INLINE unsafeFmap #-}
 -- | Like 'fmap' but with a more constrained type
 unsafeFmap :: Functor f => (a -> b) -> Free ann f a -> Free ann f b
 unsafeFmap f = loop where
   loop (Pure   h a) = Pure   h (f a)
   loop (Impure h a) = Impure h (P.fmap loop a)
 
+{-# INLINE traverse #-}
 -- | Like 'T.traverse' but with a more constrained type
 traverse :: (Applicative m, Traversable f, Monoid ann, Measured b ann) => (a -> m b) -> Free ann f a -> m(Free ann f b)
 traverse f = loop where
   loop (Pure   _ a) = pure   <$> f a
   loop (Impure _ a) = impure <$> T.traverse loop a
 
+{-# INLINE unsafeTraverse #-}
 -- | Like 'traverse' but safe only if the traversal preserves the measure
 unsafeTraverse :: (Applicative m, Traversable f) => (a -> m b) -> Free ann f a -> m(Free ann f b)
 unsafeTraverse f = loop where
   loop (Pure   h a) = Pure   h <$> f a
   loop (Impure h a) = Impure h <$> T.traverse loop a
 
+
+{-# INLINE mapM #-}
 -- | Like 'T.mapM' but with a more constrained type
 mapM :: (Monad m, Traversable f, Monoid ann, Measured b ann) => (a -> m b) -> Free ann f a -> m(Free ann f b)
 mapM f = unwrapMonad . traverse (WrapMonad . f)
 
+{-# INLINE unsafeMapM #-}
 unsafeMapM :: (Monad m, Traversable f) => (a -> m b) -> Free ann f a -> m(Free ann f b)
 unsafeMapM f = unwrapMonad . unsafeTraverse (WrapMonad . f)
 
+{-# INLINE bind #-}
 -- | Like '(>>=)' but with a more restrictive type
 bind :: (Functor f, Foldable f, Monoid ann, Measured b ann) =>
               (a -> Free ann f b) -> Free ann f a -> Free ann f b
@@ -212,20 +221,23 @@ bind f = loop where
   loop (Pure   _ a) = f a
   loop (Impure _ a) = impure (P.fmap loop a)
 
-join :: (Functor f, Foldable f, Monoid ann, Measured v ann) =>
-        Free ann f (Free ann f v) -> Free ann f v
-join = bind id
-
-unsafeJoin :: (Functor f, Foldable f, Monoid ann, Measured v ann) =>
-        Free ann f (Free ann f v) -> Free ann f v
-unsafeJoin = unsafeBind id
-
+{-# INLINE unsafeBind #-}
 -- | Like 'bind', but safe only if the monadic action preserves the measure
 unsafeBind :: Functor f =>
               (a -> Free ann f b) -> Free ann f a -> Free ann f b
 unsafeBind f = loop where
   loop (Pure   _ a) = f a
   loop (Impure h a) = Impure h (P.fmap loop a)
+
+{-# INLINE join #-}
+join :: (Functor f, Foldable f, Monoid ann, Measured v ann) =>
+        Free ann f (Free ann f v) -> Free ann f v
+join = bind id
+
+{-# INLINE unsafeJoin #-}
+unsafeJoin :: (Functor f, Foldable f, Monoid ann, Measured v ann) =>
+        Free ann f (Free ann f v) -> Free ann f v
+unsafeJoin = unsafeBind id
 
 -- zipping annotated Free Monads
 
