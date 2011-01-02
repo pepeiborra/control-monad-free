@@ -8,8 +8,11 @@ module Control.Monad.Free (
 -- * Free Monads
    MonadFree(..),
    Free(..), isPure, isImpure,
-   foldFree, foldFreeM,
+   foldFree,
    evalFree, mapFree, mapFreeM,
+-- * Monad Morphisms
+   foldFreeM,
+   induce,
 -- * Free Monad Transformers
    FreeT(..),
    foldFreeT, foldFreeT', mapFreeT,
@@ -71,6 +74,9 @@ foldFree pure imp  (Impure x) = imp (fmap (foldFree pure imp) x)
 foldFreeM :: (Traversable f, Monad m) => (a -> m b) -> (f b -> m b) -> Free f a -> m b
 foldFreeM pure _    (Pure   x) = pure x
 foldFreeM pure imp  (Impure x) = imp =<< T.mapM (foldFreeM pure imp) x
+
+induce :: (Functor f, Monad m) => (forall a. f a -> m a) -> Free f a -> m a
+induce f = foldFree return (join . f)
 
 evalFree :: (a -> b) -> (f(Free f a) -> b) -> Free f a -> b
 evalFree p _ (Pure x)   = p x
