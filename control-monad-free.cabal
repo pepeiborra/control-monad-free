@@ -18,20 +18,11 @@ synopsis: Free monads and monad transformers
 category: Control, Monads
 stability: experimental
 
-Flag transformers
-   default: True
-
 Library
   buildable: True
-  build-depends: base >= 2 && < 5, deepseq
-  if flag(transformers)
-     build-depends: transformers == 0.2.*
-     cpp-options: -DTRANSFORMERS
-  else
-     build-depends: mtl
+  build-depends: base >= 2 && < 5, deepseq, transformers
   extensions:  StandaloneDeriving, Rank2Types, MultiParamTypeClasses, FlexibleInstances, FlexibleContexts, UndecidableInstances, OverlappingInstances
   exposed-modules:
      Control.Monad.Free
-     Control.Monad.Free.Annotated
      Control.Monad.Free.Zip
      Control.Monad.Free.Improve
