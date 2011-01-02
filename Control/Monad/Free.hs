@@ -9,7 +9,7 @@ module Control.Monad.Free (
    MonadFree(..),
    Free(..), isPure, isImpure,
    foldFree,
-   evalFree, mapFree, mapFreeM,
+   evalFree, mapFree, mapFreeM, mapFreeM',
 -- * Monad Morphisms
    foldFreeM,
    induce,
@@ -82,11 +82,15 @@ evalFree :: (a -> b) -> (f(Free f a) -> b) -> Free f a -> b
 evalFree p _ (Pure x)   = p x
 evalFree _ i (Impure x) = i x
 
-mapFree :: (Functor f, Functor g) => (forall a. f a -> g a) -> Free f a -> Free g a
+mapFree :: (Functor f, Functor g) => (f (Free g a) -> g (Free g a)) -> Free f a -> Free g a
 mapFree eta = foldFree Pure (Impure . eta)
 
-mapFreeM :: (Traversable f, Functor g, Monad m) => (forall a. f a -> m(g a)) -> Free f a -> m(Free g a)
+mapFreeM  :: (Traversable f, Functor g, Monad m) => (f (Free g a) -> m(g (Free g a))) -> Free f a -> m(Free g a)
 mapFreeM eta = foldFreeM (return . Pure) (liftM Impure . eta)
+
+mapFreeM' :: (Functor f, Traversable g, Monad m) => (forall a. f a -> m(g a)) -> Free f a -> m(Free g a)
+mapFreeM' eta = foldFree (return . Pure)
+                         (liftM Impure . join . liftM T.sequence . eta)
 
 -- * Monad Transformer
 --   (built upon Luke Palmer control-monad-free hackage package)
