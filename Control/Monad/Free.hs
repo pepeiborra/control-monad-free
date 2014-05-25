@@ -44,36 +44,30 @@ deriving instance (Ord a, Ord (f(Free f a))) => Ord (Free f a)
 deriving instance (Show a, Show (f(Free f a))) => Show (Free f a)
 
 instance Functor f => Functor (Free f) where
-    fmap f (Pure a)    = Pure   (f a)
-    fmap f (Impure fa) = Impure (fmap (fmap f) fa)
+    fmap f     = foldFree (Pure . f) Impure
 
 instance (Functor f, Foldable f) => Foldable (Free f) where
-    foldMap f (Pure a)    = f a
-    foldMap f (Impure fa) = fold $ fmap (foldMap f) fa
+    foldMap f  = foldFree f fold
 
 instance Traversable f => Traversable (Free f) where
-    traverse f (Pure a)   = Pure   <$> f a
-    traverse f (Impure a) = Impure <$> traverse (traverse f) a
+    traverse f = foldFree (fmap Pure . f) (fmap Impure . sequenceA)
 
 instance Functor f => Monad (Free f) where
-    return          = Pure
-    Pure a    >>= f = f a
-    Impure fa >>= f = Impure (fmap (>>= f) fa)
+    return     = Pure
+    m >>= f    = foldFree f Impure m
 
 instance (NFData a, NFData (f(Free f a))) => NFData (Free f a) where
-  rnf (Pure a) = rnf a `seq` ()
-  rnf (Impure fa) = rnf fa `seq` ()
+    rnf (Pure a) = rnf a `seq` ()
+    rnf (Impure fa) = rnf fa `seq` ()
 
 isPure Pure{} = True; isPure _ = False
 isImpure = not . isPure
 
 foldFree :: Functor f => (a -> b) -> (f b -> b) -> Free f a -> b
-foldFree pure _    (Pure   x) = pure x
-foldFree pure imp  (Impure x) = imp (fmap (foldFree pure imp) x)
+foldFree pure imp = evalFree pure (imp . fmap (foldFree pure imp))
 
 foldFreeM :: (Traversable f, Monad m) => (a -> m b) -> (f b -> m b) -> Free f a -> m b
-foldFreeM pure _    (Pure   x) = pure x
-foldFreeM pure imp  (Impure x) = imp =<< T.mapM (foldFreeM pure imp) x
+foldFreeM pure imp = foldFree pure ((imp =<<) . T.sequence)
 
 induce :: (Functor f, Monad m) => (forall a. f a -> m a) -> Free f a -> m a
 induce f = foldFree return (join . f)
