@@ -1,5 +1,5 @@
 name: control-monad-free
-version: 0.5.3
+version: 0.5.5
 Cabal-Version:  >= 1.6
 build-type: Simple
 license: PublicDomain
@@ -20,7 +20,7 @@ stability: experimental
 
 Library
   buildable: True
-  build-depends: base >= 2 && < 5, deepseq, transformers
+  build-depends: base >= 2 && < 5, transformers, prelude-extras
   extensions:  StandaloneDeriving, Rank2Types, MultiParamTypeClasses, FlexibleInstances, FlexibleContexts, UndecidableInstances, OverlappingInstances
   exposed-modules:
      Control.Monad.Free

@@ -1,6 +1,8 @@
 {-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE Rank2Types #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE DeriveGeneric, DeriveDataTypeable #-}
 {-# LANGUAGE FlexibleInstances, FlexibleContexts, UndecidableInstances #-}
 
 module Control.Monad.Free (
@@ -16,18 +18,20 @@ module Control.Monad.Free (
 -- * Free Monad Transformers
    FreeT(..),
    foldFreeT, foldFreeT', mapFreeT,
+   foldFreeA, mapFreeA,
 -- * Translate between Free monad and Free monad transformer computations
    trans, trans', untrans,liftFree
   ) where
 
 import Control.Applicative
-import Control.DeepSeq
 import Control.Monad
 import Control.Monad.Trans.Class
+import Control.Monad.IO.Class
 import Data.Foldable
-import Data.Monoid
 import Data.Traversable as T
-import Prelude hiding (abs)
+import Data.Typeable (Typeable)
+import GHC.Generics (Generic)
+import Prelude.Extras
 
 -- | This type class generalizes over encodings of Free Monads.
 class (Functor f, Monad m) => MonadFree f m where
@@ -38,10 +42,24 @@ instance Functor f => MonadFree f (Free f) where
     free = evalFree (Pure . Left) (Pure . Right)
     wrap = Impure
 
-data Free f a = Impure (f (Free f a)) | Pure a
-deriving instance (Eq a, Eq (f(Free f a))) => Eq (Free f a)
-deriving instance (Ord a, Ord (f(Free f a))) => Ord (Free f a)
-deriving instance (Show a, Show (f(Free f a))) => Show (Free f a)
+data Free f a = Impure (f (Free f a)) | Pure a deriving (Generic, Typeable)
+
+instance (Eq1 f) => Eq1 (Free f) where (==#) = (==)
+instance (Eq a, Eq1 f) => Eq (Free f a) where
+ Pure a == Pure b = a == b
+ Impure a == Impure b = a ==# b
+ _ == _ = False
+
+instance Ord1 f => Ord1 (Free f) where compare1 = compare
+instance (Ord a, Ord1 f) => Ord (Free f a) where
+  compare Impure{} Pure{} = LT
+  compare Pure{} Impure{} = GT
+  compare (Pure   a) (Pure   b) = compare a b
+  compare (Impure a) (Impure b) = compare1 a b
+
+instance (Show a, Show1 f) => Show (Free f a) where
+  showsPrec p (Pure   a) = showParen (p > 0) $ ("Pure "   ++) . showsPrec  11 a
+  showsPrec p (Impure a) = showParen (p > 0) $ ("Impure " ++) . showsPrec1 11 a
 
 instance Functor f => Functor (Free f) where
     fmap f (Pure a)    = Pure   (f a)
@@ -60,10 +78,6 @@ instance Functor f => Monad (Free f) where
     Pure a    >>= f = f a
     Impure fa >>= f = Impure (fmap (>>= f) fa)
 
-instance (NFData a, NFData (f(Free f a))) => NFData (Free f a) where
-  rnf (Pure a) = rnf a `seq` ()
-  rnf (Impure fa) = rnf fa `seq` ()
-
 isPure Pure{} = True; isPure _ = False
 isImpure = not . isPure
 
@@ -74,6 +88,10 @@ foldFree pure imp  (Impure x) = imp (fmap (foldFree pure imp) x)
 foldFreeM :: (Traversable f, Monad m) => (a -> m b) -> (f b -> m b) -> Free f a -> m b
 foldFreeM pure _    (Pure   x) = pure x
 foldFreeM pure imp  (Impure x) = imp =<< T.mapM (foldFreeM pure imp) x
+
+foldFreeA :: (Traversable f, Applicative m) => (a -> m b) -> m (f b -> b) -> Free f a -> m b
+foldFreeA pure _    (Pure   x) = pure x
+foldFreeA pure imp  (Impure x) = imp <*> traverse (foldFreeA pure imp) x
 
 induce :: (Functor f, Monad m) => (forall a. f a -> m a) -> Free f a -> m a
 induce f = foldFree return (join . f)
@@ -87,6 +105,10 @@ mapFree eta = foldFree Pure (Impure . eta)
 
 mapFreeM  :: (Traversable f, Functor g, Monad m) => (f (Free g a) -> m(g (Free g a))) -> Free f a -> m(Free g a)
 mapFreeM eta = foldFreeM (return . Pure) (liftM Impure . eta)
+
+mapFreeA  :: (Traversable f, Functor g, Applicative m) =>
+             m (f (Free g a) -> g (Free g a)) -> Free f a -> m(Free g a)
+mapFreeA eta = foldFreeA (pure . Pure) (liftA (Impure .) eta)
 
 mapFreeM' :: (Functor f, Traversable g, Monad m) => (forall a. f a -> m(g a)) -> Free f a -> m(Free g a)
 mapFreeM' eta = foldFree (return . Pure)
@@ -122,6 +144,13 @@ instance (Functor f, Monad m) => MonadFree f (FreeT f m) where
 instance (Functor f) => MonadTrans (FreeT f) where
     lift = FreeT . liftM Left
 
+instance (Functor f, Monad m, MonadIO m) => MonadIO (FreeT f m) where
+    liftIO = lift . liftIO
+
+instance (Functor f, Monad m, MonadPlus m) => MonadPlus (FreeT f m) where
+    mzero = lift mzero
+    mplus a b = FreeT (mplus (unFreeT a) (unFreeT b))
+
 foldFreeT :: (Traversable f, Monad m) => (a -> m b) -> (f b -> m b) -> FreeT f m a -> m b
 foldFreeT p i m = unFreeT m >>= \r ->
               case r of
@@ -142,8 +171,8 @@ mapFreeT f (FreeT m) = FreeT (f ((fmap.fmap.fmap) (mapFreeT f) m))
 untrans :: (Traversable f, Monad m) => FreeT f m a -> m(Free f a)
 untrans = foldFreeT (return . Pure) (return . Impure)
 
-trans :: (Functor f, Monad m) => Free f a -> FreeT f m a
-trans  = FreeT . foldFree (return . Left) (return . Right . fmap FreeT)
+trans :: MonadFree f m => Free f a -> m a
+trans  = foldFree return wrap
 
 trans' :: (Functor f, Monad m) => m(Free f a) -> FreeT f m a
 trans' = FreeT . join . liftM unFreeT . liftM trans
