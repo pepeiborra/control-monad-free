@@ -37,12 +37,8 @@ import           Control.DeepSeq
 import           Control.Monad             (liftM, zipWithM_)
 import           Control.Monad.Free        (MonadFree(..))
 import qualified Control.Monad.Free        as Sans
-#ifdef TRANSFORMERS
 import           Control.Monad.Trans.Class (lift)
-import           Control.Monad.Trans.State -- (evalStateT, MonadState(..), lift)
-#else
-import           Control.Monad.State       (evalStateT, MonadState(..), lift)
-#endif
+import           Control.Monad.Trans.State
 import           Data.Either
 import           Data.Foldable             as F
 import           Data.Monoid
@@ -144,10 +140,6 @@ down = foldFree Sans.Pure Sans.Impure
 
 up :: (Foldable f, Functor f, Monoid ann, Measured a ann) => Sans.Free f a -> Free ann f a
 up = Sans.foldFree pure impure
-
--- ** Utilities
-
--- | Like 'P.fmap' but with a more constrained type
 
 type Algebra    f a = f a -> a
 type AlgebraM m f a = f a -> m a
