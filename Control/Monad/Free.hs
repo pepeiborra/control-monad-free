@@ -78,6 +78,11 @@ instance Functor f => Monad (Free f) where
     Pure a    >>= f = f a
     Impure fa >>= f = Impure (fmap (>>= f) fa)
 
+instance Functor f => Applicative (Free f) where
+  pure = Pure
+  Pure   f <*> x = fmap f x
+  Impure f <*> x = Impure (fmap (<*> x) f)
+
 isPure Pure{} = True; isPure _ = False
 isImpure = not . isPure
 
@@ -129,6 +134,10 @@ conj f = FreeT . f . unFreeT
 
 instance (Functor f, Functor m) => Functor (FreeT f m) where
     fmap f = conj $ fmap (editEither f ((fmap.fmap) f))
+
+instance (Functor f, Functor a, Monad a) => Applicative (FreeT f a) where
+    pure = FreeT . return . Left
+    (<*>) = ap
 
 instance (Functor f, Monad m) => Monad (FreeT f m) where
     return = FreeT . return . Left

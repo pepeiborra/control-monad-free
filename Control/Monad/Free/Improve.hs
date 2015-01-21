@@ -17,9 +17,10 @@ module Control.Monad.Free.Improve (
    C(..), rep, improve
   ) where
 
+import Control.Applicative
 import Control.Monad
 import Control.Monad.Free
-
+import Control.Monad.Trans.Class
 
 newtype C mu a = C (forall b. (a -> mu b) -> mu b)
 
@@ -37,10 +38,20 @@ instance Monad (C mu) where
   return a = C (\h -> h a)
   C p >>= k = C (\h -> p (\a -> case k a of C q -> q h))
 
+instance Applicative (C mu) where
+  pure = return
+  (<*>) = ap
+
 instance Functor f => MonadFree f (C (Free f)) where
   wrap t = C (\h -> wrap (fmap (\(C p) -> p h) t))
   free   = rep . (fmap.fmap.fmap) rep . free . improve
 
+instance (Monad m, Functor f) => MonadFree f (C (FreeT f m)) where
+  wrap t = C (\h -> wrap (fmap (\(C p) -> p h) t))
+  free   = rep . (liftM.fmap.fmap) rep . free . improve
+
 instance MonadPlus mu => MonadPlus (C mu) where
-    mzero       = rep mzero
-    mplus p1 p2 = rep (mplus (improve p1) (improve p2))
+  mzero       = rep mzero
+  mplus p1 p2 = rep (mplus (improve p1) (improve p2))
+
+instance MonadTrans C where lift m = C (m >>=)
