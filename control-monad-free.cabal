@@ -25,7 +25,7 @@ source-repository head
 
 Library
   buildable: True
-  build-depends: base >= 2 && < 5, transformers, prelude-extras
+  build-depends: base >= 4.7 && < 5, transformers, prelude-extras
   extensions:  StandaloneDeriving, Rank2Types, MultiParamTypeClasses, FlexibleInstances, FlexibleContexts, UndecidableInstances, OverlappingInstances
   exposed-modules:
      Control.Monad.Free
