@@ -83,6 +83,7 @@ instance Functor f => Applicative (Free f) where
   Pure   f <*> x = fmap f x
   Impure f <*> x = Impure (fmap (<*> x) f)
 
+
 isPure Pure{} = True; isPure _ = False
 isImpure = not . isPure
 
@@ -159,6 +160,10 @@ instance (Functor f, Monad m, MonadIO m) => MonadIO (FreeT f m) where
 instance (Functor f, Monad m, MonadPlus m) => MonadPlus (FreeT f m) where
     mzero = lift mzero
     mplus a b = FreeT (mplus (unFreeT a) (unFreeT b))
+
+instance (Functor f, Functor m, Monad m, MonadPlus m) => Alternative (FreeT f m) where
+    empty = mzero
+    (<|>) = mplus
 
 foldFreeT :: (Traversable f, Monad m) => (a -> m b) -> (f b -> m b) -> FreeT f m a -> m b
 foldFreeT p i m = unFreeT m >>= \r ->

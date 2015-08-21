@@ -54,4 +54,8 @@ instance MonadPlus mu => MonadPlus (C mu) where
   mzero       = rep mzero
   mplus p1 p2 = rep (mplus (improve p1) (improve p2))
 
+instance MonadPlus mu => Alternative (C mu) where
+  empty = mzero
+  (<|>) = mplus
+
 instance MonadTrans C where lift m = C (m >>=)
