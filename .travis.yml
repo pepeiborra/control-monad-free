@@ -10,8 +10,7 @@ before_install:
   # - travis/cabal-apt-install $mode
 
 install:
-  - cabal configure -flib-Werror $mode
-  - cabal build
+  - cabal install -flib-Werror $mode
 
 script:
   - $script && hlint . --cpp-define HLINT
