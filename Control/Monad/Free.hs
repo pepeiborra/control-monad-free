@@ -62,8 +62,10 @@ instance (Show a, Show1 f) => Show (Free f a) where
   showsPrec p (Impure a) = showParen (p > 0) $ ("Impure " ++) . showsPrec1 11 a
 
 instance Functor f => Functor (Free f) where
-    fmap f (Pure a)    = Pure   (f a)
-    fmap f (Impure fa) = Impure (fmap (fmap f) fa)
+  fmap f = go where
+    go (Pure    a) = Pure (f a)
+    go (Impure fa) = Impure (fmap go fa)
+  {-# INLINE fmap #-}
 
 instance (Functor f, Foldable f) => Foldable (Free f) where
     foldMap f (Pure a)    = f a
