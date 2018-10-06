@@ -1,19 +1,65 @@
-language: haskell
-sudo: false
-cache: bundler
-before_install:
-  # Uncomment whenever hackage is down.
-  # - mkdir -p ~/.cabal && cp travis/config ~/.cabal/config && cabal update
-  - cabal update
+# This is the simple Travis configuration, which is intended for use
+# on applications which do not require cross-platform and
+# multiple-GHC-version support. For more information and other
+# options, see:
+#
+# https://docs.haskellstack.org/en/stable/travis_ci/
+#
+# Copy these contents into the root directory of your Github project in a file
+# named .travis.yml
 
-  # Try installing some of the build-deps with apt-get for speed.
-  # - travis/cabal-apt-install $mode
+# Use new container infrastructure to enable caching
+sudo: false
+
+# Do not choose a language; we provide our own build tools.
+language: generic
+
+# Caching so the next build will be fast too.
+cache:
+  directories:
+  - $HOME/.stack
+
+matrix:
+  include:
+  - env: ARGS="--resolver=lts-2"
+    compiler: ": #stack 7.8.*"
+    addons: {apt: {packages: [libgmp-dev]}}
+  - env: ARGS="--resolver=lts-6"
+    compiler: ": #stack 7.10.*"
+    addons: {apt: {packages: [libgmp-dev]}}
+  - env: ARGS="--resolver=lts-9"
+    compiler: ": #stack 8.0.2"
+    addons: {apt: {packages: [libgmp-dev]}}
+
+  - env: BUILD=stack ARGS="--resolver lts-11"
+    compiler: ": #stack 8.2.2"
+    addons: {apt: {packages: [libgmp-dev]}}
+
+  - env: BUILD=stack ARGS="--resolver lts-12"
+    compiler: ": #stack 8.4.3"
+    addons: {apt: {packages: [libgmp-dev]}}
+
+  # Nightly builds are allowed to fail
+  - env: BUILD=stack ARGS="--resolver nightly"
+    compiler: ": #stack nightly"
+    addons: {apt: {packages: [libgmp-dev]}}
+
+  # Build on macOS in addition to Linux
+  - env: BUILD=stack ARGS=""
+    compiler: ": #stack default osx"
+    os: osx
+
+  
+before_install:
+# Download and unpack the stack executable
+- mkdir -p ~/.local/bin
+- export PATH=$HOME/.local/bin:$PATH
+- travis_retry curl -L https://www.stackage.org/stack/linux-x86_64 | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack'
 
 install:
-  - cabal install -flib-Werror $mode
+# Build dependencies
+- stack --no-terminal --install-ghc $ARGS test --bench --only-dependencies
 
 script:
-  - $script && hlint . --cpp-define HLINT
-
-env:
-  - mode="--enable-tests" script="cabal test --show-details=always"
+# Build the package, its tests, and its docs and run the tests
+- stack --no-terminal $ARGS test --haddock --no-haddock-deps 
