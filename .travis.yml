@@ -21,11 +21,6 @@ cache:
 
 matrix:
   include:
-  - env: ARGS="--resolver=lts-2"
-    compiler: ": #stack 7.8.*"
-    addons: {apt: {packages: [libgmp-dev]}}
-  - env: ARGS="--resolver=lts-6"
-    compiler: ": #stack 7.10.*"
     addons: {apt: {packages: [libgmp-dev]}}
   - env: ARGS="--resolver=lts-9"
     compiler: ": #stack 8.0.2"
