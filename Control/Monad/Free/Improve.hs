@@ -11,7 +11,6 @@
 {-# LANGUAGE Rank2Types #-}
 {-# LANGUAGE FlexibleContexts, FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE OverlappingInstances #-}
 
 module Control.Monad.Free.Improve (
    C(..), rep, improve

@@ -4,9 +4,11 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE DeriveGeneric, DeriveDataTypeable #-}
 {-# LANGUAGE FlexibleInstances, FlexibleContexts, UndecidableInstances #-}
+{-# OPTIONS -Wno-name-shadowing #-}
 
 module Control.Monad.Free (
    module Control.Monad,
+   module Control.Monad.Fail,
 -- * Free Monads
    MonadFree(..),
    Free(..), isPure, isImpure,
@@ -24,14 +26,16 @@ module Control.Monad.Free (
   ) where
 
 import Control.Applicative
-import Control.Monad
+import Control.Monad hiding (fail)
+import Control.Monad.Fail
 import Control.Monad.Trans.Class
 import Control.Monad.IO.Class
+import Data.Bifunctor
 import Data.Foldable
+import Data.Functor.Classes
 import Data.Traversable as T
 import Data.Typeable (Typeable)
 import GHC.Generics (Generic)
-import Prelude.Extras
 
 -- | This type class generalizes over encodings of Free Monads.
 class (Functor f, Monad m) => MonadFree f m where
@@ -44,22 +48,23 @@ instance Functor f => MonadFree f (Free f) where
 
 data Free f a = Impure (f (Free f a)) | Pure a deriving (Generic, Typeable)
 
-instance (Eq1 f) => Eq1 (Free f) where (==#) = (==)
-instance (Eq a, Eq1 f) => Eq (Free f a) where
- Pure a == Pure b = a == b
- Impure a == Impure b = a ==# b
- _ == _ = False
+instance (Eq1 f) => Eq1 (Free f) where
+ liftEq (==) (Pure a) (Pure b) = a == b
+ liftEq (==) (Impure a) (Impure b) = liftEq (liftEq (==)) a b
+ liftEq _ _ _ = False
+instance (Eq a, Eq1 f) => Eq (Free f a) where (==) = eq1
 
-instance Ord1 f => Ord1 (Free f) where compare1 = compare
+instance Ord1 f => Ord1 (Free f) where
+  liftCompare _ Impure{} Pure{} = LT
+  liftCompare _ Pure{} Impure{} = GT
+  liftCompare compare (Pure   a) (Pure   b) = compare a b
+  liftCompare compare (Impure a) (Impure b) = liftCompare (liftCompare compare) a b
 instance (Ord a, Ord1 f) => Ord (Free f a) where
-  compare Impure{} Pure{} = LT
-  compare Pure{} Impure{} = GT
-  compare (Pure   a) (Pure   b) = compare a b
-  compare (Impure a) (Impure b) = compare1 a b
+  compare = compare1
 
 instance (Show a, Show1 f) => Show (Free f a) where
   showsPrec p (Pure   a) = showParen (p > 0) $ ("Pure "   ++) . showsPrec  11 a
-  showsPrec p (Impure a) = showParen (p > 0) $ ("Impure " ++) . showsPrec1 11 a
+  showsPrec p (Impure a) = showParen (p > 0) $ ("Impure " ++) . liftShowsPrec showsPrec showList 11 a
 
 instance Functor f => Functor (Free f) where
   fmap f = go where
@@ -86,6 +91,7 @@ instance Functor f => Applicative (Free f) where
   Impure f <*> x = Impure (fmap (<*> x) f)
 
 
+isPure, isImpure :: Free f a -> Bool
 isPure Pure{} = True; isPure _ = False
 isImpure = not . isPure
 
@@ -132,11 +138,8 @@ instance (Traversable m, Traversable f) => Traversable (FreeT f m) where
       f' (Left  x) = Left  <$> f x
       f' (Right x) = Right <$> (traverse.traverse) f x
 
-editEither l r = either (Left . l) (Right . r)
-conj f = FreeT . f . unFreeT
-
 instance (Functor f, Functor m) => Functor (FreeT f m) where
-    fmap f = conj $ fmap (editEither f ((fmap.fmap) f))
+    fmap f = FreeT . fmap (bimap f ((fmap.fmap) f)) . unFreeT
 
 instance (Functor f, Functor a, Monad a) => Applicative (FreeT f a) where
     pure = FreeT . return . Left
