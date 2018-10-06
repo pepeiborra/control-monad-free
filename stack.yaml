@@ -1,0 +1,6 @@
+resolver: nightly-2018-10-05
+packages:
+  - '.'
+
+ghc-options:
+  "$locals": -Wall
